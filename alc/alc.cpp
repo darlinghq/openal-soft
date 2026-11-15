@@ -62,6 +62,7 @@
 #include "albyte.h"
 #include "alconfig.h"
 #include "alcontext.h"
+#include "macosx_ext.h"
 #include "alexcpt.h"
 #include "almalloc.h"
 #include "alnumeric.h"
@@ -223,6 +224,19 @@ const struct {
     ALCvoid *address;
 } alcFunctions[] = {
     DECL(alcCreateContext),
+    DECL(alcMacOSXRenderingQuality),
+    DECL(alcMacOSXGetRenderingQuality),
+    DECL(alMacOSXRenderChannelCount),
+    DECL(alMacOSXGetRenderChannelCount),
+    DECL(alcMacOSXMixerMaxiumumBusses),
+    DECL(alcMacOSXGetMixerMaxiumumBusses),
+    DECL(alcMacOSXMixerOutputRate),
+    DECL(alcMacOSXGetMixerOutputRate),
+    DECL(alBufferDataStatic),
+    DECL(alcASAGetSource),
+    DECL(alcASASetSource),
+    DECL(alcASAGetListener),
+    DECL(alcASASetListener),
     DECL(alcMakeContextCurrent),
     DECL(alcProcessContext),
     DECL(alcSuspendContext),
@@ -833,6 +847,7 @@ constexpr ALchar alExtList[] =
     "AL_EXT_OFFSET "
     "AL_EXT_source_distance_model "
     "AL_EXT_SOURCE_RADIUS "
+    "AL_EXT_STATIC_BUFFER "
     "AL_EXT_STEREO_ANGLES "
     "AL_LOKI_quadriphonic "
     "AL_SOFT_bformat_ex "
@@ -901,6 +916,7 @@ constexpr ALCchar alcNoDeviceExtList[] =
     "ALC_ENUMERATE_ALL_EXT "
     "ALC_ENUMERATION_EXT "
     "ALC_EXT_CAPTURE "
+    "ALC_EXT_MAC_OSX "
     "ALC_EXT_thread_local_context "
     "ALC_SOFT_loopback";
 constexpr ALCchar alcExtensionList[] =
@@ -910,6 +926,7 @@ constexpr ALCchar alcExtensionList[] =
     "ALC_EXT_DEDICATED "
     "ALC_EXT_disconnect "
     "ALC_EXT_EFX "
+    "ALC_EXT_MAC_OSX "
     "ALC_EXT_thread_local_context "
     "ALC_SOFT_device_clock "
     "ALC_SOFT_HRTF "
@@ -3403,6 +3420,15 @@ START_API_FUNC
     listlock.unlock();
 
     dev->LastError.store(ALC_NO_ERROR);
+
+    /* The Apple mixer output rate setting applies to playback devices. */
+    std::vector<ALCint> macattrs;
+    if(dev->Type == Playback)
+    {
+        macattrs = MacOSXAdjustContextAttrs(attrList);
+        if(!macattrs.empty())
+            attrList = macattrs.data();
+    }
 
     ALCenum err{UpdateDeviceParams(dev.get(), attrList)};
     if(err != ALC_NO_ERROR)
