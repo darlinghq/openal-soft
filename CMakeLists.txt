@@ -644,7 +644,7 @@ SET(ALC_OBJS
 
 IF(APPLE)
     # Apple's ALC_EXT_MAC_OSX / AL_EXT_STATIC_BUFFER extensions
-    SET(ALC_OBJS ${ALC_OBJS} alc/macosx_ext.cpp alc/macosx_ext.h)
+    SET(ALC_OBJS ${ALC_OBJS} alc/macosx_ext.cpp alc/macosx_ext.h alc/macosx_alut.cpp)
 ENDIF()
 
 SET(CPU_EXTS "Default")
